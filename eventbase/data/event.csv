@@ -1,0 +1,8 @@
+name,"Event Name"
+year,"2014"
+timezone,"Kolkata"
+start,"DD-MM-YYYY HH:MM","Use 24 hour time format"
+end,"DD-MM-YYYY HH:MM","Use 24 hour time format"
+subdomain,"","http://_____.doattend.com"
+website,"http://","Website URL for the event"
+venue,"","One of nimhans, mlr-jp, mlr-whitefield. Leave this blank to fill details on DoAttend after creation."
