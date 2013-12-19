@@ -16,3 +16,17 @@ maps['event'] = {
 		'event[end_date]': 'end'
 	}
 }
+
+maps['venue'] = {
+	'inputs': {
+		'event[venue]': 'venue',
+		'event[add_1]': 'add_1',
+		'event[add_2]': 'add_2',
+		'event[city]': 'city',
+		'event[state]': 'state',
+		'event[postal_code]': 'postal_code'
+	},
+	'listcontrols': {
+		'event[country]': 'country'
+	}
+}

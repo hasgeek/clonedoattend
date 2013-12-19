@@ -35,6 +35,8 @@ class DoAttend(object):
         print "Creating Event %s, %s..." % (event['name']['data'], event['year']['data'])
         forms = ParseResponse(urlopen(URI['new_event']))
         form = self._fill_form(forms[0], event, 'event')
+        if event['venue']['data']:
+            form = self._fill_form(forms[0], event['venue']['data'], 'venue')
         form.click()
         response = urlopen(form.click())
         self.event_id = urlparse(response.geturl()).path.split('/')[2]
