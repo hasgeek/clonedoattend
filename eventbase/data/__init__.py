@@ -1,6 +1,7 @@
 from helpers import csv2obj
 import os
 from jinja2 import Environment, PackageLoader
+from instance.settings import config
 
 event_root =  os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
 path_arr = event_root.split('/')
@@ -23,3 +24,10 @@ venues = {
 event['venue']['data'] = venues[event['venue']['data']] if event['venue']['data'] in venues else None
 event['about_event'] = dict(data=render('about_event.html', event=event))
 event['contact_info'] = dict(data=render('event_contact_info.txt'))
+
+payment_info = csv2obj(os.path.join(event_root, 'data/payment_info.csv'))
+
+for info in config['payment_info']:
+	if not payment_info[info]['data']:
+		payment_info[info]['data'] = config['payment_info'][info]
+		

@@ -30,3 +30,19 @@ maps['venue'] = {
 		'event[country]': 'country'
 	}
 }
+
+maps['payment_info'] = {
+	'inputs': {
+		'payment_options[acc_name]': 'acc_name',
+		'payment_options[acc_number]': 'acc_number',
+		'payment_options[bank]': 'bank',
+		'payment_options[branch_add]': 'branch_add',
+		'payment_options[ifsc]': 'ifsc',
+		'payment_options[name_on_receipt]': 'name_on_receipt'
+	},
+	'listcontrols': {
+		'payment_options[is_paid]': 'is_paid',
+		'payment_options[currency]': 'currency',
+		'payment_options[acc_type]': 'acc_type'
+	}
+}

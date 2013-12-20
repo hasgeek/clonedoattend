@@ -48,3 +48,8 @@ def yes_no(question, default="yes"):
         else:
             sys.stdout.write("Please respond with 'yes' or 'no' "\
                              "(or 'y' or 'n').\n")
+
+def title(t, hr='=', hr_size = 50):
+    print hr * hr_size
+    print t
+    print hr * hr_size

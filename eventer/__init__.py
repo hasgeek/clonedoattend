@@ -31,8 +31,9 @@ class Eventer(object):
             print "Invalid event %s" % event
         else:
             self.doattend = DoAttend()
-            event = import_module('events.%s' % event).event
-            self.doattend.create_event(event)
+            event_module = import_module('events.%s' % event)
+            self.doattend.create_event(event_module.event)
+            self.doattend.payment_options(event_module.payment_info)
 
 
 eventer = Eventer()
