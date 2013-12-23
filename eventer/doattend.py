@@ -1,4 +1,4 @@
-from mechanize import ParseResponse, urlopen, urljoin, Browser, RobustFactory
+from mechanize import ParseResponse, urlopen, urljoin, Browser, RobustFactory, LinkNotFoundError
 from instance import config
 import sys
 from .maps import maps
@@ -11,7 +11,8 @@ URI = dict(
     login=urljoin(base_uri, 'accounts/sign_in'),
     new_event=urljoin(base_uri, 'events/new'),
     ticketing_info=urljoin(base_uri, 'events/{event_id}/ticketing_options/edit'),
-    tickets=urljoin(base_uri, 'events/{event_id}/tickets'))
+    tickets=urljoin(base_uri, 'events/{event_id}/tickets'),
+    new_ticket=urljoin(base_uri, 'events/{event_id}/tickets/new'))
 
 class DoAttend(object):
 
@@ -62,6 +63,49 @@ class DoAttend(object):
         else:
             print "There was an error in setting up payment info..."
 
+    def create_tickets(self, tickets):
+        def get_parent_tickets(types):
+            ticks = []
+            for category, tickets_of_type in tickets.iteritems():
+                if category in types:
+                    for ticket in tickets_of_type:
+                        if 'id' in ticket:
+                            ticks.append(ticket['id'])
+            return ticks
+        def tcreate(ticket, addon=False):
+            print "Creating {} {}...".format('addon' if addon else 'ticket', ticket['name']['data'])
+            self.browser.open(URI['new_ticket'].format(event_id=self.event_id))
+            self.browser.select_form(nr=0)
+            form = self._fill_form(self.browser.form, ticket, 'ticket')
+            if addon:
+                form['ticket_type[parent_ticket_ids][]'] = get_parent_tickets(ticket['addon_for']['data'])
+            self.browser.open(form.click())
+            if self.browser.geturl() == URI['tickets'].format(event_id=self.event_id):
+                print "{} {} has been created...".format('Addon' if addon else 'Ticket', ticket['name']['data'])
+            else:
+                print "There was a problem creating {} {}...".format('addon' if addon else 'ticket', ticket['name']['data'])
+        title("CREATE TICKETS")
+        for category, tickets_of_type in tickets.iteritems():
+            for ticket in tickets_of_type:
+                if ticket['type']['data'] in ['ticket', 'both']:
+                    tcreate(ticket)
+                    pass
+        self.browser.open(URI['tickets'].format(event_id=self.event_id))
+        n = 0
+        for category, tickets_of_type in tickets.iteritems():
+            for ticket in tickets_of_type:
+                if ticket['type']['data'] in ['ticket', 'both']:
+                    try:
+                        ticket['id'] = self.browser.find_link(text='Edit', nr=n).url.split('/')[4]
+                    except LinkNotFoundError:
+                        pass
+                    n += 1
+        title("CREATE ADDONS")
+        for category, tickets_of_type in tickets.iteritems():
+            for ticket in tickets_of_type:
+                if ticket['type']['data'] in ['addon', 'both']:
+                    tcreate(ticket, addon=True)
+
     def _fill_form(self, form, data, mapper):
         m = maps[mapper]
         form.set_all_readonly(False)
@@ -71,13 +115,19 @@ class DoAttend(object):
                     form[key] = data[item]['data']
                 if _type == 'listcontrols':
                     form[key] = [data[item]['data']]
-                if _type == 'dates':
+                if _type == 'datetimes':
                     try:
                         form[key] = datetime.strptime(data[item]['data'], '%d-%m-%Y %H:%M').strftime('%b-%d-%Y %H:%M')
                     except ValueError:
                         print "Value %s for %s is invalid. It should be formatted in DD-MM-YYYY HH:MM format" % (data[item]['data'], item)
                         sys.exit(1)
-        for _type in ['inputs', 'listcontrols', 'dates']:
+                if _type == 'dates':
+                    try:
+                        form[key] = datetime.strptime(data[item]['data'], '%d-%m-%Y').strftime('%b-%d-%Y')
+                    except ValueError:
+                        print "Value %s for %s is invalid. It should be formatted in DD-MM-YYYY format" % (data[item]['data'], item)
+                        sys.exit(1)
+        for _type in ['inputs', 'listcontrols', 'datetimes', 'dates']:
             if _type in m:
                 fill(_type)
         return form

@@ -3,19 +3,19 @@ import sys
 from collections import OrderedDict
 
 def csv2obj(path):
-	f = open(path, 'r')
-	obj = OrderedDict()
-	csv = unicodecsv.reader(f, delimiter=",", quotechar='"')
-	for row in csv:
-		if(len(row)):
-			obj[row[0]] = dict(data=row[1], helper=row[2] if len(row) >= 3 else "")
-	return obj
+    f = open(path, 'r')
+    obj = OrderedDict()
+    csv = unicodecsv.reader(f, delimiter=",", quotechar='"')
+    for row in csv:
+        if(len(row)):
+            obj[row[0]] = dict(data=row[1], helper=row[2] if len(row) >= 3 else "")
+    return obj
 
 def obj2csv(path, obj):
-	f = open(path, 'w')
-	csv = unicodecsv.writer(f, delimiter=",", quotechar='"')
-	for key, data in enumerate(obj):
-		csv.writerow([key, data['data'], data['helper']])
+    f = open(path, 'w')
+    csv = unicodecsv.writer(f, delimiter=",", quotechar='"')
+    for key, data in enumerate(obj):
+        csv.writerow([key, data['data'], data['helper']])
 
 def yes_no(question, default="yes"):
     """Ask a yes/no question via raw_input() and return their answer.

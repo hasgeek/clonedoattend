@@ -1,0 +1,9 @@
+A corporate ticket entitles you:
+
+1. Entry to all the {{ event['name']['data']}} hacknights and workshops from {{ event['workshops_start']['data'] }} to {{ event['workshops_end']['data'] }}
+2. Entry to conference from {{ event['start']['data'] }} to {{ event['end']['data'] }}
+3. Custom Invoice (useful for employees who need to claim reimbursement from their companies)
+4. Event t-shirt
+5. Your company's logo will be listed on the {{ event['name']['data']}} Website under the Corporate Ticket buyers' section
+
+This ticket is transferrable / refundable until ______. DoAttend's cancellation charge will deducted from the ticket amount and the balance will be refunded to your account within 7-10 working days. To cancel your ticket, write to support@hasgeek.com

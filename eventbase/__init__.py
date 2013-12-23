@@ -1,1 +1,1 @@
-from .data import event, payment_info
+from .data import event, payment_info, tickets

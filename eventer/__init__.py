@@ -23,7 +23,7 @@ class Eventer(object):
             else:
                 sys.exit(1)
         shutil.copytree('eventbase', path)
-        print "Event created in %s. Please edit the data and templates as required by you."
+        print "Event created in %s. Please edit the data and templates as required by you." % event
 
     def publish(self, event):
         path = 'events/%s' % event
@@ -34,6 +34,7 @@ class Eventer(object):
             event_module = import_module('events.%s' % event)
             self.doattend.create_event(event_module.event)
             self.doattend.payment_options(event_module.payment_info)
+            self.doattend.create_tickets(event_module.tickets)
 
 
 eventer = Eventer()

@@ -1,0 +1,3 @@
+This ticket allows you entry to the {{ event['name']['data']}} {{ event['year']['data']}} conference from {{ event['start']['data'] }} to {{ event['end']['data'] }}. It includes access to talks, food and any materials provided in the conference package. If you wish to attend workshops from {{ event['workshops_start']['data'] }} to {{ event['workshops_end']['data'] }}, you have to purchase a separate workshop ticket. 
+
+This ticket is refundable until _____. DoAttend's cancellation charge will be deducted from the ticket amount and the balance will be refunded to your account within 7-10 working days. To cancel your ticket, write to support@hasgeek.com.
