@@ -1,4 +1,4 @@
-from mechanize import ParseResponse, urlopen, urljoin, Browser, RobustFactory, LinkNotFoundError
+from mechanize import ParseResponse, urlopen, urljoin, Browser, RobustFactory, LinkNotFoundError, ItemNotFoundError
 from instance import config
 import sys
 from .maps import maps
@@ -12,7 +12,8 @@ URI = dict(
     new_event=urljoin(base_uri, 'events/new'),
     ticketing_info=urljoin(base_uri, 'events/{event_id}/ticketing_options/edit'),
     tickets=urljoin(base_uri, 'events/{event_id}/tickets'),
-    new_ticket=urljoin(base_uri, 'events/{event_id}/tickets/new'))
+    new_ticket=urljoin(base_uri, 'events/{event_id}/tickets/new'),
+    reg_form=urljoin(base_uri, 'events/{event_id}/registration_form'))
 
 class DoAttend(object):
 
@@ -105,6 +106,35 @@ class DoAttend(object):
             for ticket in tickets_of_type:
                 if ticket['type']['data'] in ['addon', 'both']:
                     tcreate(ticket, addon=True)
+
+    def update_reg_info(self):
+        fields = ['11', '10', '9', '3', '651']
+        def add_field(field, nr):
+            return
+            self.browser.open(URI['reg_form'].format(event_id=self.event_id))
+            self.browser.select_form(nr=nr)
+            form = self.browser.form
+            try:
+                form['info_id'] = [field]
+            except ItemNotFoundError:
+                return
+            self.browser.open(form.click())
+        title("ADD REGISTRATION FORM FIELDS")
+        print "Adding registration fields..."
+        for field in fields:
+            add_field(field, 1)
+        fields = ['2385']
+        for field in fields:
+            add_field(field, 2)
+        print "Registration fields added..."
+        print "Marking mandatory fields..."
+        self.browser.open(URI['reg_form'].format(event_id=self.event_id))
+        self.browser.select_form(nr=0)
+        form = self.browser.form
+        form['reqd_info[]'] = form.find_control(name='reqd_info[]').possible_items()[:3]
+        self.browser.open(form.click())
+        print "Mandatory fields marked..."
+
 
     def _fill_form(self, form, data, mapper):
         m = maps[mapper]

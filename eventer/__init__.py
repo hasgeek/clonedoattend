@@ -35,6 +35,7 @@ class Eventer(object):
             self.doattend.create_event(event_module.event)
             self.doattend.payment_options(event_module.payment_info)
             self.doattend.create_tickets(event_module.tickets)
+            self.doattend.update_reg_info()
 
 
 eventer = Eventer()
