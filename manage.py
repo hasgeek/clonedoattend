@@ -13,5 +13,3 @@ elif sys.argv[1] == 'new' or sys.argv[1] == 'publish':
         sys.exit(1)
     else:
         getattr(eventer, sys.argv[1])(sys.argv[2])
-
-os.environ['PYTHONINSPECT'] = 'True'
