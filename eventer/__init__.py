@@ -3,6 +3,7 @@ import os
 import sys
 import shutil
 from .doattend import DoAttend
+from .discounter import Discounter
 from instance import config
 from helpers import yes_no
 from importlib import import_module
@@ -12,6 +13,8 @@ class Eventer(object):
     def __init__(self):
         if not os.path.exists('events'):
             os.mkdir('events')
+        if not os.path.exists('discounts'):
+            os.mkdir('discounts')
         if not os.path.exists('events/__init__.py'):
             with open('events/__init__.py', 'w'):
                 pass
@@ -37,5 +40,9 @@ class Eventer(object):
             self.doattend.create_tickets(event_module.tickets)
             self.doattend.update_reg_info()
 
+    def discounts(self):
+        self.discounter = Discounter()
+        self.discounter.inputs()
+        self.discounter.generate()
 
 eventer = Eventer()

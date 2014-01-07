@@ -1,6 +1,7 @@
 from mechanize import ParseResponse, urlopen, urljoin, Browser, RobustFactory, LinkNotFoundError, ItemNotFoundError
 from instance import config
 import sys
+import re
 from .maps import maps
 from helpers import title
 from datetime import datetime
@@ -10,9 +11,12 @@ base_uri = 'http://doattend.com/'
 URI = dict(
     login=urljoin(base_uri, 'accounts/sign_in'),
     new_event=urljoin(base_uri, 'events/new'),
+    overview=urljoin(base_uri, 'events/{event_id}/overview'),
     ticketing_info=urljoin(base_uri, 'events/{event_id}/ticketing_options/edit'),
     tickets=urljoin(base_uri, 'events/{event_id}/tickets'),
     new_ticket=urljoin(base_uri, 'events/{event_id}/tickets/new'),
+    edit_ticket=urljoin(base_uri, 'events/{event_id}/tickets/{ticket_id}/edit'),
+    new_discount=urljoin(base_uri, 'events/{event_id}/discounts/new'),
     reg_form=urljoin(base_uri, 'events/{event_id}/registration_form'))
 
 class DoAttend(object):
@@ -135,6 +139,52 @@ class DoAttend(object):
         self.browser.open(form.click())
         print "Mandatory fields marked..."
 
+
+    def set_event_id(self, event_id):
+        print "Validating Event ID %s..." % event_id
+        self.browser.open(URI['overview'].format(event_id=event_id))
+        is_valid = self.browser.geturl() == URI['overview'].format(event_id=event_id)
+        if not is_valid:
+            print "The Event ID %s is either invalid or not for an event owned by you..." % event_id
+            return False
+        else:
+            self.event_id = event_id
+            title = self.get_event_title()
+            if title:
+                print "Event set to %s, %s..." % (event_id, title)
+            else:
+                print "Event set to %s..." % event_id
+            return True
+
+    def get_event_title(self):
+        if self.browser.geturl() != URI['overview'].format(event_id=self.event_id):
+            self.browser.open(URI['overview'].format(event_id=self.event_id))
+        response = self.browser.response().read()
+        matches = re.search('<h3>(.+)</h3>', response)
+        return matches.group(1) if matches else ""
+
+    def get_url(self):
+        return self.browser.geturl()
+
+    def get_discountable_tickets(self):
+        print "Fetching details for discountable tickets..."
+        self.browser.open(URI['new_discount'].format(event_id=self.event_id))
+        self.browser.select_form(nr=0)
+        ticket_ids = self.browser.form.find_control('discount[ticket_type_ids][]').possible_items()
+        tickets = []
+        for ticket_id in ticket_ids:
+            self.browser.open(URI['edit_ticket'].format(event_id=self.event_id, ticket_id=ticket_id))
+            self.browser.select_form(nr=0)
+            tickets.append({'id': ticket_id, 'name': self.browser.form['ticket_type[name]']})
+        print "%s discountable tickets fetched..." % len(tickets)
+        return tickets
+
+    def create_discount(self, discount):
+        self.browser.open(URI['new_discount'].format(event_id=self.event_id))
+        self.browser.select_form(nr=0)
+        form = self._fill_form(self.browser.form, discount, 'discount')
+        form['discount[ticket_type_ids][]'] = [ticket['id'] for ticket in discount['tickets']['data']]
+        self.browser.open(form.click())
 
     def _fill_form(self, form, data, mapper):
         m = maps[mapper]

@@ -62,3 +62,19 @@ maps['ticket'] = {
         'ticket_type[sales_close]': 'sales_close'
     }
 }
+
+maps['discount'] = {
+    'inputs': {
+        'discount[name]': 'discount_name',
+        'discount[amt]': 'amt',
+        'discount[max_limit]': 'max_limit',
+        'discount[code]': 'code'
+    },
+    'dates': {
+        'discount[start_date]': 'start_date',
+        'discount[end_date]': 'end_date'
+    },
+    'listcontrols': {
+        'discount[percentage]': 'percentage'
+    }
+}

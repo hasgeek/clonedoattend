@@ -32,5 +32,6 @@ nosetests.xml
 *.mo
 
 events
+discounts
 .DS_Store
 instance/settings.py
