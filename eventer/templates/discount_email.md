@@ -3,7 +3,7 @@ Hello {{ discount['name']['data'] }},
 Please find below {{ discount['codes']['data'] }} discount code{% if discount['codes']['data'] > 1 %}s{% endif %} {%- if title %} for {{ title }}{%- endif -%}.
 
 {% for code in codes -%}
-* {{ code }}
+* {% autoescape %}{{ code }}{% endautoescape %}
 {% endfor %}
 
 {% if discount['codes']['data'] == 1 %}This code is{% else %}These codes are{% endif %} valid for a single use upto {{ discount['end_date']['data'] }} for the following tickets:
