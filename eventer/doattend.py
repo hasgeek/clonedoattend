@@ -114,7 +114,6 @@ class DoAttend(object):
     def update_reg_info(self):
         fields = ['11', '10', '9', '3', '651']
         def add_field(field, nr):
-            return
             self.browser.open(URI['reg_form'].format(event_id=self.event_id))
             self.browser.select_form(nr=nr)
             form = self.browser.form

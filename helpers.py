@@ -3,7 +3,7 @@ import sys
 from collections import OrderedDict
 
 def csv2obj(path):
-    f = open(path, 'r')
+    f = open(path, 'rU')
     obj = OrderedDict()
     csv = unicodecsv.reader(f, delimiter=",", quotechar='"')
     for row in csv:
