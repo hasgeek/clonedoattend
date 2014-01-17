@@ -18,3 +18,5 @@ There is a base data and content template that is replicated for you to customiz
 * In the `events/<event_name>/templates` folder, customize the [Jinja](http://jinja.pocoo.org/docs/) templates, as per your needs.
 * `cd` into the root folder of the script.
 * Run `python manage.py publish <event_name>`.
+* Run `python manage.py discounts` for help on discount code generation.
+* Run `python manage.py speakertickets <event_id>` to check [Funnel](https://funnel.hasgeek.com) for confirmed speakers, and book tickets for speakers who do not have tickets.
