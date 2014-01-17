@@ -5,7 +5,7 @@ import sys
 import eventbase
 
 if len(sys.argv) <= 1:
-    print 'Usage: %s new|publish|discounts' % sys.argv[0]
+    print 'Usage: %s new|publish|discounts|speakertickets' % sys.argv[0]
     sys.exit(1)
 elif sys.argv[1] == 'new' or sys.argv[1] == 'publish':
     if len(sys.argv) != 3:
@@ -20,3 +20,9 @@ elif sys.argv[1] == 'discounts':
         sys.exit(1)
     else:
         eventer.discounts()
+elif sys.argv[1] == 'speakertickets':
+    if len(sys.argv) != 3:
+        print 'Usage: %s speakertickets event_id' % sys.argv[0]
+        sys.exit(1)
+    else:
+        eventer.speakertickets(sys.argv[2])

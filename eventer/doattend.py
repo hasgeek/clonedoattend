@@ -2,31 +2,33 @@ from mechanize import ParseResponse, urlopen, urljoin, Browser, RobustFactory, L
 from instance import config
 import sys
 import re
-from .maps import maps
-from helpers import title
-from datetime import datetime
+import StringIO
+import unicodecsv
+from .mechanizer import Mechanizer
+import getpass
+from helpers import title, yes_no
 from urlparse import urlparse
+from coaster.utils import make_name
 
 base_uri = 'http://doattend.com/'
 URI = dict(
     login=urljoin(base_uri, 'accounts/sign_in'),
     new_event=urljoin(base_uri, 'events/new'),
     overview=urljoin(base_uri, 'events/{event_id}/overview'),
+    edit_event=urljoin(base_uri, 'events/{event_id}/edit'),
     ticketing_info=urljoin(base_uri, 'events/{event_id}/ticketing_options/edit'),
     tickets=urljoin(base_uri, 'events/{event_id}/tickets'),
     new_ticket=urljoin(base_uri, 'events/{event_id}/tickets/new'),
     edit_ticket=urljoin(base_uri, 'events/{event_id}/tickets/{ticket_id}/edit'),
     new_discount=urljoin(base_uri, 'events/{event_id}/discounts/new'),
-    reg_form=urljoin(base_uri, 'events/{event_id}/registration_form'))
+    reg_form=urljoin(base_uri, 'events/{event_id}/registration_form'),
+    orders=urljoin(base_uri, 'events/{event_id}/orders/registration_sheet.csv'))
 
-class DoAttend(object):
+class DoAttend(Mechanizer):
 
     def __init__(self):
-        self.browser = Browser(factory=RobustFactory())
-        self.email = config.get('DOATTEND_EMAIL', None) or raw_input('Please enter your registered DoAttend email address: ')
-        self.password = config.get('DOATTEND_PASS', None) or getpass.getpass('Please enter your DoAttend password: ')
+        super(DoAttend, self).__init__()
         self._login()
-        return super(DoAttend, self).__init__()
 
     def _login(self):
         title("LOGIN")
@@ -34,8 +36,8 @@ class DoAttend(object):
         self.browser.open(URI['login'])
         self.browser.select_form(nr=0)
         form = self.browser.form
-        form['account[email]'] = self.email
-        form['account[password]'] = self.password
+        form['account[email]'] = config.get('DOATTEND_EMAIL', None) or raw_input('Please enter your registered DoAttend email address: ')
+        form['account[password]'] = config.get('DOATTEND_PASS', None) or getpass.getpass('Please enter your DoAttend password: ')
         self.browser.open(form.click())
         if self.browser.geturl() == URI['login']:
             print "The credentials you provided are incorrect..."
@@ -131,13 +133,18 @@ class DoAttend(object):
             add_field(field, 2)
         print "Registration fields added..."
         print "Marking mandatory fields..."
-        self.browser.open(URI['reg_form'].format(event_id=self.event_id))
-        self.browser.select_form(nr=0)
-        form = self.browser.form
-        form['reqd_info[]'] = form.find_control(name='reqd_info[]').possible_items()[:3]
+        form['reqd_info[]'] = self._get_reg_info_field_ids()[:3]
         self.browser.open(form.click())
         print "Mandatory fields marked..."
 
+    def _get_reg_info_field_ids(self, reqd=False):
+        self.browser.open(URI['reg_form'].format(event_id=self.event_id))
+        self.browser.select_form(nr=0)
+        form = self.browser.form
+        if reqd:
+            return (form.find_control(name='reqd_info[]').possible_items(), form['reqd_info[]'])
+        else:
+            return form.find_control(name='reqd_info[]').possible_items()
 
     def set_event_id(self, event_id):
         print "Validating Event ID %s..." % event_id
@@ -154,6 +161,20 @@ class DoAttend(object):
             else:
                 print "Event set to %s..." % event_id
             return True
+
+    def event_id_input(self):
+        is_valid = False
+        accepted = False
+        while not is_valid or not accepted:
+            event_id = raw_input("Please enter the DoAttend event ID: ")
+            is_valid = self.set_event_id(event_id)
+            if is_valid:
+                title = self.get_event_title()
+                self.event_title = title
+                if title:
+                    accepted = yes_no("Is %s the correct event?" % title)
+                else:
+                    accepted = yes_no("Could not retrieve the title for the event. Please check %s to confirm if %s is the correct event. Is it the correct event?" % (self.doattend.get_url(), event_id))
 
     def get_event_title(self):
         if self.browser.geturl() != URI['overview'].format(event_id=self.event_id):
@@ -174,7 +195,7 @@ class DoAttend(object):
         for ticket_id in ticket_ids:
             self.browser.open(URI['edit_ticket'].format(event_id=self.event_id, ticket_id=ticket_id))
             self.browser.select_form(nr=0)
-            tickets.append({'id': ticket_id, 'name': self.browser.form['ticket_type[name]']})
+            tickets.append({'id': ticket_id, 'name': self.browser.form['ticket_type[name]'], 'max': self.browser.form['ticket_type[max_qty]']})
         print "%s discountable tickets fetched..." % len(tickets)
         return tickets
 
@@ -185,28 +206,73 @@ class DoAttend(object):
         form['discount[ticket_type_ids][]'] = [ticket['id'] for ticket in discount['tickets']['data']]
         self.browser.open(form.click())
 
-    def _fill_form(self, form, data, mapper):
-        m = maps[mapper]
-        form.set_all_readonly(False)
-        def fill(_type):
-            for key, item in m[_type].items():
-                if _type == 'inputs':
-                    form[key] = data[item]['data']
-                if _type == 'listcontrols':
-                    form[key] = [data[item]['data']]
-                if _type == 'datetimes':
-                    try:
-                        form[key] = datetime.strptime(data[item]['data'], '%d-%m-%Y %H:%M').strftime('%b-%d-%Y %H:%M')
-                    except ValueError:
-                        print "Value %s for %s is invalid. It should be formatted in DD-MM-YYYY HH:MM format" % (data[item]['data'], item)
-                        sys.exit(1)
-                if _type == 'dates':
-                    try:
-                        form[key] = datetime.strptime(data[item]['data'], '%d-%m-%Y').strftime('%b-%d-%Y')
-                    except ValueError:
-                        print "Value %s for %s is invalid. It should be formatted in DD-MM-YYYY format" % (data[item]['data'], item)
-                        sys.exit(1)
-        for _type in ['inputs', 'listcontrols', 'datetimes', 'dates']:
-            if _type in m:
-                fill(_type)
-        return form
+    def get_orders(self):
+        self.browser.open(URI['orders'].format(event_id=self.event_id))
+        csv_data = self.browser.response().read()
+        f = StringIO.StringIO(csv_data)
+        headers = [make_name(field).replace(u'-', u'').replace(u'\n', u'') for field in f.next().split(',')]
+        orders = unicodecsv.reader(f, delimiter=',')
+        def indexof(name):
+            try:
+                return headers.index(name)
+            except ValueError:
+                return None
+        columns = dict(
+            ticket_number=indexof(u'ticketnumber'),
+            name=indexof(u'name'),
+            email=indexof(u'email'),
+            company=indexof(u'company'),
+            job=indexof(u'jobtitle'),
+            city=indexof(u'city'),
+            phone=indexof(u'phone'),
+            twitter=indexof(u'twitterhandle'),
+            regdate=indexof(u'date'),
+            order_id=indexof(u'orderid'),
+            ticket_type=indexof(u'ticketname'),
+            addons=indexof(u'addonspurchased')
+            )
+        return [{column:order[columns[column]] for column in columns if columns[column]} for order in orders]
+
+    def get_booking_url(self):
+        self.browser.open(URI['edit_event'].format(event_id=self.event_id))
+        self.browser.select_form(nr=0)
+        return 'https://' + self.browser.form['event[subdomain]'] + '.doattend.com'
+
+    def book_ticket(self, tickets, people, code=None):
+        print "Booking tickets for %s people..." % len(people)
+        print "Selecting tickets%s..." % ' and applying discount code' if code else ""
+        booking_url = self.get_booking_url()
+        (reg_info_fields, reqd_fields) = self._get_reg_info_field_ids(reqd=True)
+        self.browser.open(booking_url)
+        self.browser.select_form(nr=0)
+        tickets_data = dict(("qty_" + ticket, dict(data=str(len(people)))) for ticket in tickets)
+        tickets_map = dict(
+            inputs=dict(code='code'),
+            listcontrols=dict((ticket_key, ticket_key) for ticket_key in tickets_data))
+        if code:
+            tickets_data['code'] = dict(data=code)
+        form = self._fill_form(self.browser.form, tickets_data, tickets_map)
+        self.browser.open(form.click())
+        if self.browser.geturl() == urljoin(booking_url, 'orders/addons'):
+            self.browser.select_form(nr=0)
+            self.browser.open(self.browser.form.click())
+        self.browser.select_form(nr=0)
+        extra_fields = ['company', 'jobtitle', 'phone', 'city', 'twitter', 'tshirt']
+        form = self._init_form(self.browser.form)
+        for i, person in enumerate(people):
+            print "Updating information for %s..." % person['name']
+            form.set_value(person['name'], name='order[participation_attributes][][name]', nr=i)
+            form.set_value(person['email'], name='order[participation_attributes][][email]', nr=i)
+            for j, field in enumerate(reg_info_fields):
+                # This will fail for T-shirts as it is of listcontrol type.
+                # In our current use case T-shirt info is never going to be updated.
+                # In case we update T-shirt info in future, we should use _fill_form and provide a custom mapper dict to it. E.g. tickets_map above
+                if extra_fields[j] in person and person[extra_fields[j]]:
+                    form['info_%s_%s' % (i, field)] = person[extra_fields[j]]
+                elif field in reqd_fields:
+                    form['info_%s_%s' % (i, field)] = "*"
+        for ticket in tickets:
+            form['terms_' + ticket] = ['true']
+        self.browser.open(form.click())
+        print "Tickets booked..."
+        print self.browser.geturl()

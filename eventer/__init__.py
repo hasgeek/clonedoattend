@@ -1,9 +1,9 @@
-import getpass
 import os
 import sys
 import shutil
 from .doattend import DoAttend
 from .discounter import Discounter
+from .speakertickets import SpeakerTickets
 from instance import config
 from helpers import yes_no
 from importlib import import_module
@@ -15,6 +15,8 @@ class Eventer(object):
             os.mkdir('events')
         if not os.path.exists('discounts'):
             os.mkdir('discounts')
+        if not os.path.exists('instance/.efmaps'):
+            os.mkdir('instance/.efmaps')
         if not os.path.exists('events/__init__.py'):
             with open('events/__init__.py', 'w'):
                 pass
@@ -44,5 +46,11 @@ class Eventer(object):
         self.discounter = Discounter()
         self.discounter.inputs()
         self.discounter.generate()
+
+    def speakertickets(self, event_id):
+        self.st = SpeakerTickets(event_id)
+        self.st.create()
+
+        
 
 eventer = Eventer()

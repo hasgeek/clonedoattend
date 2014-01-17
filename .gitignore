@@ -35,3 +35,4 @@ events
 discounts
 .DS_Store
 instance/settings.py
+instance/.efmaps

@@ -1,8 +1,6 @@
 import os
 import sys
 import unicodecsv
-import string
-import random
 from datetime import date
 import smtplib
 from email.mime.multipart import MIMEMultipart
@@ -11,7 +9,7 @@ from coaster.gfm import markdown
 from jinja2 import Environment, PackageLoader
 from instance import config
 from .doattend import DoAttend
-from helpers import yes_no, title
+from helpers import title, random_discount_code
 
 class Discounter(object):
     discounts_dir = 'discounts'
@@ -39,7 +37,7 @@ class Discounter(object):
     def inputs(self):
         self._select_discount()
         self.doattend = DoAttend()
-        self._event_id()
+        self.doattend.event_id_input()
         self._collect_email_info()
 
     def generate(self):
@@ -95,7 +93,7 @@ class Discounter(object):
         except ValueError:
             discount['codes']['data'] = 1
         for i in range(discount['codes']['data']):
-            code = ''.join(random.choice(string.letters + string.digits + '!@#$%^&*()') for i in range(8))
+            code = random_discount_code()
             discount['discount_name'] = {
                 'data': '.'.join(self.discount_files[self.discount_index].split('.')[:-1]) + ' %s %s' % (discount['email']['data'], i + 1)}
             codes.append(code)
@@ -142,20 +140,6 @@ class Discounter(object):
                     self.discounts[len(self.discounts) - 1][self.fields[column]] = dict(data=value, helper=u"")
         print "%s discounts loaded..." % len(self.discounts)
 
-
-    def _event_id(self):
-        is_valid = False
-        accepted = False
-        while not is_valid or not accepted:
-            event_id = raw_input("Please enter the DoAttend event ID of the event for which you want to generate the discount codes: ")
-            is_valid = self.doattend.set_event_id(event_id)
-            if is_valid:
-                title = self.doattend.get_event_title()
-                self.event_title = title
-                if title:
-                    accepted = yes_no("Is %s the correct event?" % title)
-                else:
-                    accepted = yes_no("Could not retrieve the title for the event. Please check %s to confirm if %s is the correct event. Is it the correct event?" % (self.doattend.get_url(), event_id))
 
     def _collect_email_info(self):
         self.email_info = dict(
