@@ -38,6 +38,7 @@ class Discounter(object):
         self._select_discount()
         self.doattend = DoAttend()
         self.doattend.event_id_input()
+        self.event_title = self.doattend.get_event_title()
         self._collect_email_info()
 
     def generate(self):
