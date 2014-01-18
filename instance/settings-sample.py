@@ -19,3 +19,6 @@ config['payment_info'] = {
     'acc_type': "",
     'name_on_receipt': "HasGeek Media LLP"
 }
+
+config['MAIL_HOST'] = 'localhost'
+config['MAIL_PORT'] = 25
