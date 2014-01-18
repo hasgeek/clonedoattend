@@ -122,4 +122,5 @@ class SpeakerTickets(object):
         speaker['company'] = raw_input("Enter the company for %s: " % speaker['name'])
         speaker['jobtitle'] = raw_input("Enter the job title for %s: " % speaker['name'])
         speaker['twitter'] = raw_input("Enter the twitter handle for %s: " % speaker['name'])
+        speaker['city'] = raw_input("Enter the city for %s: " % speaker['name'])
         return speaker
