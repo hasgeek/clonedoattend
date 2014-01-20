@@ -26,7 +26,7 @@ class SpeakerTickets(object):
         people = []
         for proposal in self.proposals:
             if self._ticket_exists(proposal['email'], proposal['speaker']):
-                print "Ticket for %s already exists..." % proposal['speaker']
+                print "Ticket for %s already exists..." % proposal['speaker'].encode('utf-8')
             elif proposal['email'] not in self.speakers:
                 speaker=dict(
                     name=proposal['speaker'],
@@ -41,7 +41,7 @@ class SpeakerTickets(object):
             to = index + max_qty if index + max_qty < len(people) else len(people)
             for i in range(index, to):
                 people[i] = self._speaker_info(people[i])
-            print "Book tickets for %s..." % ", ".join([person['name'] for person in people[index:to]])
+            print "Book tickets for %s..." % ", ".join([person['name'].encode('utf-8') for person in people[index:to]])
             self.doattend.book_ticket([ticket['id'] for ticket in self.selected_tickets], people[index:to], self._discount_code(to - index))
             index = to
             
@@ -58,7 +58,8 @@ class SpeakerTickets(object):
                 f.close()
         self.proposals = self.funnel.get_proposals(proposal_space, confirmed=True)
         for proposal in self.proposals:
-            proposal['speaker'] = '('.join(proposal['speaker'].split('(')[:-1]).encode('utf-8').strip()
+            proposal['speaker'] = unicode(proposal['speaker'])
+            proposal['speaker'] = u'('.join(proposal['speaker'].split('(')[:-1]).strip()
 
     def _load_existing_orders(self):
         print "Load DoAttend orders..."
@@ -117,10 +118,10 @@ class SpeakerTickets(object):
         return code
 
     def _speaker_info(self, speaker):
-        print "Opening proposal page for %s's proposal..." % speaker['name']
+        print "Opening proposal page for %s's proposal..." % speaker['name'].encode('utf-8')
         webbrowser.open_new_tab(speaker['proposal']['url'])
-        speaker['company'] = raw_input("Enter the company for %s: " % speaker['name'])
-        speaker['jobtitle'] = raw_input("Enter the job title for %s: " % speaker['name'])
-        speaker['twitter'] = raw_input("Enter the twitter handle for %s: " % speaker['name'])
-        speaker['city'] = raw_input("Enter the city for %s: " % speaker['name'])
+        speaker['company'] = raw_input("Enter the company for %s: " % speaker['name'].encode('utf-8'))
+        speaker['jobtitle'] = raw_input("Enter the job title for %s: " % speaker['name'].encode('utf-8'))
+        speaker['twitter'] = raw_input("Enter the twitter handle for %s: " % speaker['name'].encode('utf-8'))
+        speaker['city'] = raw_input("Enter the city for %s: " % speaker['name'].encode('utf-8'))
         return speaker
