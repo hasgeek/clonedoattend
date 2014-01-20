@@ -33,6 +33,8 @@ nosetests.xml
 
 events
 discounts
+tshirts
 .DS_Store
 instance/settings.py
 instance/.efmaps
+instance/.emaps

@@ -4,6 +4,7 @@ import shutil
 from .doattend import DoAttend
 from .discounter import Discounter
 from .speakertickets import SpeakerTickets
+from .tshirts import Tees
 from instance import config
 from helpers import yes_no
 from importlib import import_module
@@ -15,8 +16,12 @@ class Eventer(object):
             os.mkdir('events')
         if not os.path.exists('discounts'):
             os.mkdir('discounts')
+        if not os.path.exists('tshirts'):
+            os.mkdir('tshirts')
         if not os.path.exists('instance/.efmaps'):
             os.mkdir('instance/.efmaps')
+        if not os.path.exists('instance/.emaps'):
+            os.mkdir('instance/.emaps')
         if not os.path.exists('events/__init__.py'):
             with open('events/__init__.py', 'w'):
                 pass
@@ -50,6 +55,16 @@ class Eventer(object):
     def speakertickets(self, event_id):
         self.st = SpeakerTickets(event_id)
         self.st.create()
+
+    def tshirts(self, action, event_id):
+        if action == 'download':
+            tees = Tees(event_id)
+            tees.download()
+            return True
+        elif action == 'email':
+            return True
+        else:
+            return False
 
         
 
