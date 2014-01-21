@@ -42,9 +42,9 @@ class Tees(object):
             if buyer[1] not in done:
                 done[buyer[1]] = []
             done[buyer[1]].append(buyer[0])
+        def international(buyer):
+            return str(int(buyer[2][0] == '+' and buyer[2][:3] != '+91'))
         def should_add(buyer):
-            if buyer[2][0] == '+' and buyer[2][0:2] != '+91':
-                return False
             if buyer[1] in done:
                 for d in done[buyer[1]]:
                     if levenshtein(buyer[0], d) <= 3:
@@ -56,6 +56,7 @@ class Tees(object):
         csv = unicodecsv.writer(f, delimiter=",", quotechar='"')
         for order in self.orders:
             buyer = [order['name'], order['email'], order['phone'], order['city'], "0"]
+            buyer.append(international(buyer))
             if (u'Corporate' in order['ticket_type'] or 'T-shirt' in order['addons']) and should_add(buyer):
                 csv.writerow(buyer)
                 tshirt_buyers.append(buyer)
@@ -66,6 +67,7 @@ class Tees(object):
                 buyer = [order['name'], order['email'], order['phone'], order['city'], "0"]
             else:
                 buyer = [proposal['speaker'], proposal['email'], proposal['phone'], "", "0"]
+            buyer.append(international(buyer))
             if should_add(buyer):
                 csv.writerow(buyer)
                 tshirt_buyers.append(buyer)
