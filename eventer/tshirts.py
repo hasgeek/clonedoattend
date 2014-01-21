@@ -57,6 +57,8 @@ class Tees(object):
         for order in self.orders:
             buyer = [order['name'], order['email'], order['phone'], order['city'], "0"]
             buyer.append(international(buyer))
+            buyer.append("doattend")
+            buyer.append(order['order_id'])
             if (u'Corporate' in order['ticket_type'] or 'T-shirt' in order['addons']) and should_add(buyer):
                 csv.writerow(buyer)
                 tshirt_buyers.append(buyer)
@@ -68,6 +70,8 @@ class Tees(object):
             else:
                 buyer = [proposal['speaker'], proposal['email'], proposal['phone'], "", "0"]
             buyer.append(international(buyer))
+            buyer.append("funnel")
+            buyer.append(proposal['url'])
             if should_add(buyer):
                 csv.writerow(buyer)
                 tshirt_buyers.append(buyer)
