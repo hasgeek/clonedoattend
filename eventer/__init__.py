@@ -62,6 +62,8 @@ class Eventer(object):
             tees.download()
             return True
         elif action == 'email':
+            tees = Tees(event_id, mailer=True)
+            tees.email()
             return True
         else:
             return False
