@@ -145,7 +145,7 @@ class Tees(object):
 
                     env = Environment(loader=PackageLoader('eventer', 'templates'))
                     template = env.get_template('tshirt_email.md')
-                    text = template.render(title=title, name=buyer[0], link=link, international=bool(int(buyer[5])))
+                    text = template.render(title=title, name=buyer[0], link=link, international=bool(int(buyer[5])), source=buyer[6])
                     html = markdown(text)
 
                     msg.attach(MIMEText(text.encode('utf-8'), 'plain'))
