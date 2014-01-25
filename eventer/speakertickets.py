@@ -59,7 +59,8 @@ class SpeakerTickets(object):
         self.proposals = self.funnel.get_proposals(proposal_space, confirmed=True)
         for proposal in self.proposals:
             proposal['speaker'] = unicode(proposal['speaker'])
-            proposal['speaker'] = u'('.join(proposal['speaker'].split('(')[:-1]).strip()
+            if u'(' in proposal['speaker']:
+                proposal['speaker'] = u'('.join(proposal['speaker'].split('(')[:-1]).strip()
 
     def _load_existing_orders(self):
         print "Load DoAttend orders..."

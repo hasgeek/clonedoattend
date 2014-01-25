@@ -46,7 +46,8 @@ class Tees(object):
         self.proposals = self.funnel.get_proposals(proposal_space, confirmed=True)
         for proposal in self.proposals:
             proposal['speaker'] = unicode(proposal['speaker'])
-            proposal['speaker'] = u'('.join(proposal['speaker'].split('(')[:-1]).strip()
+            if u'(' in proposal['speaker']:
+                proposal['speaker'] = u'('.join(proposal['speaker'].split('(')[:-1]).strip()
 
     def download(self):
         f = open('tshirts/%s.csv' % self.event_id, 'r+')
