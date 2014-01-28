@@ -114,7 +114,7 @@ class DoAttend(Mechanizer):
                     tcreate(ticket, addon=True)
 
     def update_reg_info(self):
-        fields = ['11', '10', '9', '3', '651']
+        fields = ['11', '10', '9', '2', '3', '5', '651']
         def add_field(field, nr):
             self.browser.open(URI['reg_form'].format(event_id=self.event_id))
             self.browser.select_form(nr=nr)
@@ -133,7 +133,7 @@ class DoAttend(Mechanizer):
             add_field(field, 2)
         print "Registration fields added..."
         print "Marking mandatory fields..."
-        form['reqd_info[]'] = self._get_reg_info_field_ids()[:3]
+        form['reqd_info[]'] = self._get_reg_info_field_ids()[:6]
         self.browser.open(form.click())
         print "Mandatory fields marked..."
 
