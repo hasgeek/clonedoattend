@@ -1,5 +1,6 @@
 from mechanize import Browser, RobustFactory
 from datetime import datetime
+import sys
 from .maps import maps
 
 class Mechanizer(object):
