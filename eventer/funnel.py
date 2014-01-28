@@ -14,8 +14,8 @@ URI = dict(
     proposal_json=urljoin(base_uri, '{space}/json'))
 
 class Funnel(Mechanizer):
-    def __init__(self):
-        super(Funnel, self).__init__()
+    def __init__(self, browser=None):
+        super(Funnel, self).__init__(browser)
         self._login()
 
     def _login(self):

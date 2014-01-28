@@ -26,8 +26,8 @@ URI = dict(
 
 class DoAttend(Mechanizer):
 
-    def __init__(self):
-        super(DoAttend, self).__init__()
+    def __init__(self, browser=None):
+        super(DoAttend, self).__init__(browser)
         self._login()
 
     def _login(self):

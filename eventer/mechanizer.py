@@ -6,8 +6,11 @@ import sys
 from .maps import maps
 
 class Mechanizer(object):
-    def __init__(self):
-        self.browser = Browser(factory=RobustFactory())
+    def __init__(self, browser=None):
+        if browser:
+            self.browser = browser
+        else:
+            self.browser = Browser(factory=RobustFactory())
         return super(Mechanizer, self).__init__()
 
     def _init_form(self, form):
