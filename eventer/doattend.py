@@ -133,6 +133,8 @@ class DoAttend(Mechanizer):
             add_field(field, 2)
         print "Registration fields added..."
         print "Marking mandatory fields..."
+        self.browser.select_form(nr=0)
+        form = self.browser.form
         form['reqd_info[]'] = self._get_reg_info_field_ids()[:6]
         self.browser.open(form.click())
         print "Mandatory fields marked..."
