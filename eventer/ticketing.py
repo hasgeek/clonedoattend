@@ -7,11 +7,11 @@ from .doattend import DoAttend
 from .funnel import Funnel
 from helpers import title, levenshtein, random_discount_code
 
-class SpeakerTickets(object):
+class Ticketing(object):
     efmaps_dir = 'instance/.efmaps'
     speakers = {}
     def __init__(self, event_id):
-        super(SpeakerTickets, self).__init__()
+        super(Ticketing, self).__init__()
         self.doattend = DoAttend()
         if not self.doattend.set_event_id(event_id):
             sys.exit(1)

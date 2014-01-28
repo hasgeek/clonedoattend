@@ -3,7 +3,7 @@ import sys
 import shutil
 from .doattend import DoAttend
 from .discounter import Discounter
-from .speakertickets import SpeakerTickets
+from .ticketing import Ticketing
 from .tshirts import Tees
 from instance import config
 from helpers import yes_no
@@ -52,9 +52,9 @@ class Eventer(object):
         self.discounter.inputs()
         self.discounter.generate()
 
-    def speakertickets(self, event_id):
-        self.st = SpeakerTickets(event_id)
-        self.st.create()
+    def tickets(self, event_id):
+        self.ticketing = Ticketing(event_id)
+        self.ticketing.create()
 
     def tshirts(self, action, event_id):
         if action == 'download':
