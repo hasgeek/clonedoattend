@@ -1,2 +1,3 @@
 mechanize
 Jinja2
+egenix-mx-base

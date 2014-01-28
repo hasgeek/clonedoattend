@@ -1,5 +1,7 @@
 from mechanize import Browser, RobustFactory
 from datetime import datetime
+from mx import DateTime
+
 import sys
 from .maps import maps
 
@@ -27,17 +29,9 @@ class Mechanizer(object):
                 if _type == 'listcontrols':
                     form[key] = [data[item]['data']]
                 if _type == 'datetimes':
-                    try:
-                        form[key] = datetime.strptime(data[item]['data'], '%d-%m-%Y %H:%M').strftime('%b-%d-%Y %H:%M')
-                    except ValueError:
-                        print "Value %s for %s is invalid. It should be formatted in DD-MM-YYYY HH:MM format" % (data[item]['data'], item)
-                        sys.exit(1)
+                    form[key] = DateTime.Parser.DateTimeFromString(data[item]['data']).strftime('%b-%d-%Y %H:%M')
                 if _type == 'dates':
-                    try:
-                        form[key] = datetime.strptime(data[item]['data'], '%d-%m-%Y').strftime('%b-%d-%Y')
-                    except ValueError:
-                        print "Value %s for %s is invalid. It should be formatted in DD-MM-YYYY format" % (data[item]['data'], item)
-                        sys.exit(1)
+                    form[key] = DateTime.Parser.DateTimeFromString(data[item]['data']).strftime('%b-%d-%Y')
         for _type in ['inputs', 'listcontrols', 'datetimes', 'dates']:
             if _type in m:
                 fill(_type)
