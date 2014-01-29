@@ -34,17 +34,22 @@ class Funnel(Mechanizer):
             print "Successfully logged into Funnel..."
 
     def get_proposals(self, proposal_space, **filters):
-        print "Fetching proposals..."
-        self.browser.open(URI['proposal_json'].format(space=proposal_space))
-        proposals = json.loads(self.browser.response().read())['proposals']
+        if not hasattr(self, 'proposals'):
+            print "Fetching proposals..."
+            self.browser.open(URI['proposal_json'].format(space=proposal_space))
+            proposals = json.loads(self.browser.response().read())['proposals']
+            print "Proposals fetched..."
         def include(proposal):
             for key, value in filters.iteritems():
                 try:
-                    if proposal[key] != value:
-                        return False
+                    if type(value) == list:
+                        if proposal[key] not in value:
+                            return False
+                    else:
+                        if proposal[key] != value:
+                            return False
                 except KeyError:
                     return False
             return True
-        print "Proposals fetched..."
-        return [proposal for proposal in proposals if include(proposal)]
+        return [proposal for proposal in self.proposals if include(proposal)]
 
