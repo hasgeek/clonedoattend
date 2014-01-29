@@ -37,7 +37,7 @@ class Funnel(Mechanizer):
         if not hasattr(self, 'proposals'):
             print "Fetching proposals..."
             self.browser.open(URI['proposal_json'].format(space=proposal_space))
-            proposals = json.loads(self.browser.response().read())['proposals']
+            self.proposals = json.loads(self.browser.response().read())['proposals']
             print "Proposals fetched..."
         def include(proposal):
             for key, value in filters.iteritems():
