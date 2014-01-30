@@ -4,10 +4,12 @@ import sys
 import re
 import StringIO
 import unicodecsv
+import dateutil.parser
 from .mechanizer import Mechanizer
 import getpass
 from helpers import title, yes_no
 from urlparse import urlparse
+from lxml import html
 from coaster.utils import make_name
 
 base_uri = 'http://doattend.com/'
@@ -20,9 +22,11 @@ URI = dict(
     tickets=urljoin(base_uri, 'events/{event_id}/tickets'),
     new_ticket=urljoin(base_uri, 'events/{event_id}/tickets/new'),
     edit_ticket=urljoin(base_uri, 'events/{event_id}/tickets/{ticket_id}/edit'),
+    discounts=urljoin(base_uri, 'events/{event_id}/discounts'),
     new_discount=urljoin(base_uri, 'events/{event_id}/discounts/new'),
     reg_form=urljoin(base_uri, 'events/{event_id}/registration_form'),
-    orders=urljoin(base_uri, 'events/{event_id}/orders/registration_sheet.csv'))
+    orders=urljoin(base_uri, 'events/{event_id}/orders/registration_sheet.csv'),
+    order=urljoin(base_uri, 'events/{event_id}/orders/{order_id}'))
 
 class DoAttend(Mechanizer):
 
@@ -231,9 +235,13 @@ class DoAttend(Mechanizer):
             regdate=indexof(u'date'),
             order_id=indexof(u'orderid'),
             ticket_type=indexof(u'ticketname'),
-            addons=indexof(u'addonspurchased')
+            addons=indexof(u'addonspurchased'),
+            discount=indexof(u'discountcode')
             )
-        return [{column:order[columns[column]] for column in columns if columns[column]} for order in orders]
+        orders = [{column:order[columns[column]] for column in columns if columns[column]} for order in orders]
+        for order in orders:
+            order['order_url'] = URL['order'].format(event_id=self.event_id, order_id=order['order_id'])
+        return orders
 
     def get_booking_url(self):
         self.browser.open(URI['edit_event'].format(event_id=self.event_id))
@@ -278,3 +286,17 @@ class DoAttend(Mechanizer):
         self.browser.open(form.click())
         print "Tickets booked..."
         print self.browser.geturl()
+
+    def get_discounts(self):
+        print "Fetching existing discount codes..."
+        self.browser.open(URI['discounts'].format(event_id=self.event_id))
+        tree = html.fromstring(self.browser.response().read())
+        return [dict(
+            name=discount.cssselect('.column:nth-child(2) > h3')[0].text,
+            code=discount.cssselect('.column:nth-child(3)')[0].text.strip(),
+            active=discount.cssselect('.column:nth-child(1) img')[0].attrib.get('alt') == "Discount-active",
+            available=int(discount.cssselect('.column:nth-child(5)')[0].text.strip()),
+            start_date=dateutil.parser.parse(discount.cssselect('.column:nth-child(6)')[0].text_content().strip().split('\n')[0].split(':')[1].strip()),
+            end_date=dateutil.parser.parse(discount.cssselect('.column:nth-child(6)')[0].text_content().strip().split('\n')[1].split(':')[1].strip()))
+            for discount in tree.cssselect('.content-head+.container hr+.list')]
+

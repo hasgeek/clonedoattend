@@ -1,6 +1,6 @@
 from mechanize import Browser, RobustFactory
 from datetime import datetime
-from mx import DateTime
+import dateutil.parser
 
 import sys
 from .maps import maps
@@ -32,9 +32,9 @@ class Mechanizer(object):
                 if _type == 'listcontrols':
                     form[key] = [data[item]['data'].encode('utf-8')]
                 if _type == 'datetimes':
-                    form[key] = DateTime.Parser.DateTimeFromString(data[item]['data'].encode('utf-8')).strftime('%b-%d-%Y %H:%M')
+                    form[key] = dateutil.parser.parse(data[item]['data'].encode('utf-8')).strftime('%b-%d-%Y %H:%M')
                 if _type == 'dates':
-                    form[key] = DateTime.Parser.DateTimeFromString(data[item]['data'].encode('utf-8')).strftime('%b-%d-%Y')
+                    form[key] = dateutil.parser.parse(data[item]['data'].encode('utf-8')).strftime('%b-%d-%Y')
         for _type in ['inputs', 'listcontrols', 'datetimes', 'dates']:
             if _type in m:
                 fill(_type)

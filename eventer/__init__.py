@@ -54,7 +54,7 @@ class Eventer(object):
 
     def tickets(self, event_id):
         self.ticketing = Ticketing(event_id)
-        self.ticketing.create()
+        self.ticketing.process()
 
     def tshirts(self, action, event_id):
         if action == 'download':
