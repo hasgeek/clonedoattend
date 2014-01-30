@@ -240,7 +240,7 @@ class DoAttend(Mechanizer):
             )
         orders = [{column:order[columns[column]] for column in columns if columns[column]} for order in orders]
         for order in orders:
-            order['order_url'] = URL['order'].format(event_id=self.event_id, order_id=order['order_id'])
+            order['order_url'] = URI['order'].format(event_id=self.event_id, order_id=order['order_id'])
         return orders
 
     def get_booking_url(self):
