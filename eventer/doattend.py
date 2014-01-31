@@ -201,7 +201,13 @@ class DoAttend(Mechanizer):
         for ticket_id in ticket_ids:
             self.browser.open(URI['edit_ticket'].format(event_id=self.event_id, ticket_id=ticket_id))
             self.browser.select_form(nr=0)
-            tickets.append({'id': ticket_id, 'name': self.browser.form['ticket_type[name]'], 'max': self.browser.form['ticket_type[max_qty]']})
+            tickets.append({
+                'id': ticket_id,
+                'name': self.browser.form['ticket_type[name]'],
+                'max': self.browser.form['ticket_type[max_qty]'],
+                'start_date': dateutil.parser.parse(self.browser.form['ticket_type[sales_open]']),
+                'end_date': dateutil.parser.parse(self.browser.form['ticket_type[sales_close]']),
+                'price': self.browser.form['ticket_type[price]']})
         print "%s discountable tickets fetched..." % len(tickets)
         return tickets
 

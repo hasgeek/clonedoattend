@@ -57,7 +57,7 @@ def title(t, hr='=', hr_size = 50):
     print hr * hr_size
 
 def random_discount_code():
-    return ''.join(random.choice(string.letters + string.digits + '!@#$%^&*()') for i in range(8))
+    return ''.join(random.choice(string.letters + string.digits) for i in range(8))
 
 def levenshtein(a,b):
     "Calculates the Levenshtein distance between a and b."

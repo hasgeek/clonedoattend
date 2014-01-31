@@ -2,13 +2,21 @@ import os
 import sys
 import webbrowser
 import getpass
+import unicodecsv
 import simplejson as json
-from datetime import date
+import pickle
+from datetime import date, datetime
 from collections import defaultdict
 import dateutil.parser
 from .doattend import DoAttend
 from .funnel import Funnel
 from helpers import title, levenshtein, random_discount_code
+from instance import config
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from coaster.gfm import markdown
+from jinja2 import Environment, PackageLoader
 
 class Ticketing(object):
     efmaps_dir = 'instance/.efmaps'
@@ -16,16 +24,25 @@ class Ticketing(object):
         booking=[],
         cancellation=[],
         discount=[])
+    sent_discounts = defaultdict(lambda: None)
     def __init__(self, event_id):
         super(Ticketing, self).__init__()
+        try:
+            self.mailer = smtplib.SMTP(config['MAIL_HOST'], config['MAIL_PORT'])
+        except:
+            print "Error connecting with mail server. Cannot proceed..."
+            sys.exit(1)
         self.doattend = DoAttend()
         if not self.doattend.set_event_id(event_id):
             sys.exit(1)
         self._load_existing_orders()
+        self.event_title = self.doattend.get_event_title()
         self._load_speaker_discounts()
+        self._select_tickets(event_id)
+        self._select_tickets(event_id, conference=True)
+        self._load_sent_discounts(event_id)
         self.funnel = Funnel()
         self._load_proposals(event_id)
-        self._select_tickets(event_id)
 
     def process(self):
         for email, proposal_group in self.proposals.iteritems():
@@ -57,7 +74,23 @@ class Ticketing(object):
         self.queues['cancellation'].append((proposal, ticket))
 
     def _send_discount(self, person):
-        self.queues['discount'].append(person)
+        record = self.sent_discounts[person['email']]
+        if not record or record[2] == "0":
+            try:
+                person['code'] = record[1] if bool(record[1]) else None
+            except TypeError:
+                person['code'] = None
+            self.queues['discount'].append(person)
+
+    def _load_sent_discounts(self, event_id):
+        self.sent_discounts_path = os.path.join(self.efmaps_dir, event_id + '_proposer_discounts.csv')
+        if not os.path.exists(self.sent_discounts_path):
+            with open(self.sent_discounts_path, 'w') as f:
+                f.close()
+        self.sent_discounts_file = open(self.sent_discounts_path, 'r+')
+        csv = unicodecsv.reader(self.sent_discounts_file, delimiter=",", quotechar='"')
+        for proposer in csv:
+            self.sent_discounts[proposer[0]] = proposer
     
     def _process(self):
         self._process_bookings()
@@ -87,8 +120,59 @@ class Ticketing(object):
             getpass.getpass("Opening order page for %s. Please press ENTER once done..." % person['name'])
 
     def _process_discounts(self):
-        title("PROCESS PROPOSER DISCOUNTS")
-        print [person['name'] for person in self.queues['discount']]
+        title("PROCESS PROPOSAL DISCOUNTS")
+        csv = unicodecsv.writer(self.sent_discounts_file, delimiter=",", quotechar='"')
+        for person in self.queues['discount']:
+            now = datetime.now()
+            person['submitted'] = person['submitted'].replace(tzinfo=None)
+            slot_ticket, book_ticket = None, None
+            for ticket in self.conf_tickets:
+                if not slot_ticket and ticket['start_date'].date() <= person['submitted'].date() and person['submitted'].date() <= ticket['end_date'].date():
+                    slot_ticket = ticket
+                if not book_ticket and ticket['start_date'].date() <= now.date() and now.date() <= ticket['end_date'].date():
+                    book_ticket = ticket
+            if not person['code'] and book_ticket != slot_ticket:
+                person['code'] = self._discount_code(1, "Proposal Discount", percentage=False, value=int(float(book_ticket['price'])) - int(float(slot_ticket['price'])), ending=book_ticket['end_date'])
+            if not self.sent_discounts[person['email']]:
+                self.sent_discounts[person['email']] = [person['email'], person["code"], "0"]
+                csv.writerow(self.sent_discounts[person['email']])
+            if person['code'] or int(float(book_ticket['price'])) <= int(float(slot_ticket['price'])):
+                self.sent_discounts[person['email']][1] = person['code']
+                try:
+                    self._discount_email(person, book_ticket, slot_ticket)
+                    self.sent_discounts[person['email']][2] = "1"
+                    print "Discount code sent to %s..." % person['name']
+                except:
+                    print "Unable to send discount code email to %s..." % person['name']
+        with open(self.sent_discounts_path, 'w') as f:
+            csv = unicodecsv.writer(f, delimiter=",", quotechar='"')
+            for discount in self.sent_discounts.values():
+                csv.writerow(discount)
+
+    def _discount_email(self, person, book_ticket, slot_ticket):
+        msg = MIMEMultipart('alternative')
+        
+        msg['Subject'] = "%s Discount Code" % self.event_title
+        msg['To'] = person['email']
+        msg['From'] = 'support@hasgeek.com'
+        msg['Bcc'] = 'mitesh@hasgeek.com'
+
+        env = Environment(loader=PackageLoader('eventer', 'templates'))
+        template_name = self.doattend.event_id + '_proposal_discount_email.md'
+        path = os.path.join('eventer', 'templates', 'custom', template_name)
+        if os.path.exists(path):
+            template = env.get_template('custom/' + template_name)
+        else:
+            template = env.get_template('proposal_discount_email.md')
+        text = template.render(title=self.event_title, person=person, book_ticket=book_ticket, slot_ticket=slot_ticket, float=float, int=int)
+        html = markdown(text)
+
+        msg.attach(MIMEText(text.encode('utf-8'), 'plain'))
+        msg.attach(MIMEText(html.encode('utf-8'), 'html'))
+
+        to = [person['email'], msg['Bcc']]
+        
+        self.mailer.sendmail(msg['From'], to, msg.as_string())
 
     def _load_proposals(self, event_id):
         path = os.path.join(self.efmaps_dir, event_id)
@@ -133,25 +217,39 @@ class Ticketing(object):
             self.orders[order['email']].append(order)
         print "DoAttend orders loaded..."
 
-    def _select_tickets(self, event_id):
-        path = os.path.join(self.efmaps_dir, event_id + '_tickets')
+    def _select_tickets(self, event_id, conference=False):
+        if conference:
+            path = os.path.join(self.efmaps_dir, event_id + '_conf_tickets')
+        else:
+            path = os.path.join(self.efmaps_dir, event_id + '_tickets')
         if os.path.exists(path):
             with open(path, 'r') as f:
-                self.selected_tickets = json.loads(f.read())
+                if conference:
+                    self.conf_tickets = pickle.load(f)
+                else:
+                    self.selected_tickets = json.loads(f.read())
                 f.close()
             return
-        self.discountable_tickets = self.doattend.get_discountable_tickets()
+        if not hasattr(self, 'discountable_tickets'):
+            self.discountable_tickets = self.doattend.get_discountable_tickets()
         while True:
-            print "Which tickets do you want to send to proposers?"
+            if conference:
+                print "Which of these tickets are conference tickets?"
+            else:
+                print "Which tickets do you want to send to proposers?"
             for i, ticket in enumerate(self.discountable_tickets):
                 print '\t' + str(i+1) + '.', ticket['name']
-            self.selected_tickets = [int(ticket.strip()) for ticket in raw_input("Please enter comma-separated numbers of the tickets: ").split(',')]
+            tickets = [int(ticket.strip()) for ticket in raw_input("Please enter comma-separated numbers of the tickets: ").split(',')]
             try:
-                for i, ticket in enumerate(self.selected_tickets):
-                    self.selected_tickets[i] = self.discountable_tickets[ticket - 1]
+                for i, ticket in enumerate(tickets):
+                    tickets[i] = self.discountable_tickets[ticket - 1]
                 with open(path, 'w') as f:
-                    f.write(json.dumps(self.selected_tickets))
-                    f.close()
+                    if conference:
+                        self.conf_tickets = tickets
+                        pickle.dump(tickets, f)
+                    else:
+                        f.write(json.dumps(ticket))
+                        self.selected_tickets = tickets
                 return
             except IndexError:
                 print "Invalid input..."
@@ -169,7 +267,7 @@ class Ticketing(object):
             percentage=dict(data='true' if percentage else 'false'),
             amt=dict(data=str(value)),
             start_date=dict(data=date.today().strftime('%d-%m-%Y')),
-            end_date=dict(data=ending.strftime('%d-%m-%Y') if ending else date.today().strftime('%d-%m-%Y')),
+            end_date=dict(data=ending.strftime('%m-%d-%Y') if ending else date.today().strftime('%m-%d-%Y')),
             max_limit=dict(data=str(qty)),
             tickets=dict(data=self.selected_tickets),
             discount_name=dict(data=name),
