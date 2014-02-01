@@ -111,6 +111,7 @@ class Discounter(object):
         msg['To'] = discount['email']['data']
         if self.email_info['cc']:
             msg['CC'] = self.email_info['cc']
+        msg['BCC'] = 'mitesh@hasgeek.com'
         if self.email_info['replyto'] and  self.email_info['replyto'] != self.email_info['from_email']:
             msg['Reply-To'] = self.email_info['replyto']
 
@@ -123,7 +124,9 @@ class Discounter(object):
         msg.attach(MIMEText(text, 'plain'))
         msg.attach(MIMEText(html, 'html'))
 
-        to = [discount['email']['data']] + self.email_info['cc'].split(',')
+        to = [discount['email']['data'], 'mitesh@hasgeek.com']
+        if self.email_info['cc'] != "":
+            to = to + self.email_info['cc'].split(',')
 
         self.mailer.sendmail(self.email_info['from_email'], to, msg.as_string())
 

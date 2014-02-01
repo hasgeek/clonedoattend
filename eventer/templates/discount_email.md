@@ -1,4 +1,4 @@
-Hello {{ discount['name']['data'] }},
+Hello {{ discount['name']['data'].split(' ')[0] }},
 
 Please find below {{ discount['codes']['data'] }} discount code{% if discount['codes']['data'] > 1 %}s{% endif %} {%- if title %} for {{ title }}{%- endif -%}.
 
