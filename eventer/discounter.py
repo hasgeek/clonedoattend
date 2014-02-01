@@ -123,7 +123,9 @@ class Discounter(object):
         msg.attach(MIMEText(text, 'plain'))
         msg.attach(MIMEText(html, 'html'))
 
-        self.mailer.sendmail(self.email_info['from_email'], discount['email']['data'], msg.as_string())
+        to = [discount['email']['data']] + self.email_info['cc'].split(',')
+
+        self.mailer.sendmail(self.email_info['from_email'], to, msg.as_string())
 
 
 
