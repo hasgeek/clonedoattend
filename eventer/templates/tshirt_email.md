@@ -1,4 +1,4 @@
-Hello {{ name }},
+Hello {{ name.split(' ')[0] }},
 
 {% if source == "doattend" %}
 Thanks for your order for the {{ title }} t-shirt!
