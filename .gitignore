@@ -38,3 +38,4 @@ tshirts
 instance/settings.py
 instance/.efmaps
 instance/.emaps
+eventer/templates/custom

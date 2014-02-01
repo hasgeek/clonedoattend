@@ -126,7 +126,11 @@ class Tees(object):
                 try:
                     msg = MIMEMultipart('alternative')
                     
-                    msg['Subject'] = "[Urgent]Your %s T-shirt" % title
+                    if not hasattr(self, 'email_tag'):
+                        self.email_tag = raw_input('Change email subject tag. [Default: Urgent]:')
+                        if self.email_tag == "":
+                            self.email_tag = "Urgent"
+                    msg['Subject'] = "[%s]Your %s T-shirt" % (self.email_tag, title)
                     msg['To'] = buyer[1]
                     msg['From'] = 'support@hasgeek.com'
                     msg['Bcc'] = 'mitesh@hasgeek.com'
@@ -145,7 +149,16 @@ class Tees(object):
                         urlencode(dict((field['key'], field['value'].encode('utf-8')) for key, field in form_fields.iteritems() if field['value'])))
 
                     env = Environment(loader=PackageLoader('eventer', 'templates'))
-                    template = env.get_template('tshirt_email.md')
+                    if os.path.exists(os.path.join('eventer', 'templates', 'custom', self.event_id + '_tshirt_email.md')):
+                        template = env.get_template('custom/%s_tshirt_email.md' % self.event_id)
+                    else:
+                        if not hasattr(self, 'email_without_template'):
+                            self.email_without_template = False
+                        if self.no_template or yes_no('No custom template available. Send using generic email?'):
+                            self.email_without_template = True
+                            template = env.get_template('tshirt_email.md')
+                        else:
+                            sys.exit(1)
                     text = template.render(title=title, name=buyer[0], link=link, international=bool(int(buyer[5])), source=buyer[6])
                     html = markdown(text)
 

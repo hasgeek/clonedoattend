@@ -13,7 +13,7 @@ Since you are located outside India, **you can ignore the address fields**. We h
 We will courier the {{ title }} t-shirt to you in a few days' time. We require you to update your address and t-shirt size using our t-shirt information form, the link to which is given below.
 {% endif %}
 
-### Please fill this form before 31st January 2014.
+### Please fill this form at least 15 days before commencement of the event.
 
 [Update your t-shirt preference now]({{ link }})
 
