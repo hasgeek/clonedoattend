@@ -37,14 +37,14 @@ class Ticketing(object):
             sys.exit(1)
         self._load_existing_orders()
         self.event_title = self.doattend.get_event_title()
+
+    def process(self):
         self._load_speaker_discounts()
         self._select_tickets(event_id)
         self._select_tickets(event_id, conference=True)
         self._load_sent_discounts(event_id)
         self.funnel = Funnel()
         self._load_proposals(event_id)
-
-    def process(self):
         for email, proposal_group in self.proposals.iteritems():
             if len(proposal_group['confirmed']):
                 proposal = proposal_group['confirmed'][0]
@@ -63,7 +63,23 @@ class Ticketing(object):
                 proposal = proposal_group['rejected'][0]
                 self._send_discount(proposal)
         self._process()
-    
+
+    def show_duplicates(self):
+        title("SHOWING DUPLICATE TICKET HOLDERS")
+        for email, order in self.orders.iteritems():
+            tickets = []
+            status = False
+            for ticket in order:
+                if ticket['ticket_type'] in tickets:
+                    status = True
+                tickets.append(ticket['ticket_type'])
+                if ticket['addons']:
+                    tickets.append(ticket['addons'])
+            if status:
+                title("EMAIL:" + email.upper())
+                print "Name\t\t\t | Phone\t | Order ID\t | Ticket ID\t | Ticket Type\t\t\t | Addons\t |"
+                for ticket in order:
+                    print ticket['name'] + ('\t' if len(ticket['name']) < 16 else '') + '\t | ' + ticket['phone'] + '\t | ' + ticket['order_id'] + '\t | ' + ticket['ticket_number'] + '\t | ' + ticket['ticket_type'] + '\t | ' + ticket['addons'] + '\t |'
     def _book_ticket(self, person):
         if self._ticket(person):
             print "Ticket for %s already exists..." % person['name'].encode('utf-8')

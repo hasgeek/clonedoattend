@@ -54,7 +54,16 @@ class Eventer(object):
 
     def tickets(self, event_id):
         self.ticketing = Ticketing(event_id)
-        self.ticketing.process()
+        option = None
+        while option not in ['1', '2']:
+            print "What would you like to do?"
+            print "\t1. Book tickets & Send discounts"
+            print "\t2. Show orders with duplicate tickets on the same email address"
+            option = raw_input('Please enter your choice: ')
+        if option == '1':
+            self.ticketing.process()
+        elif option == '2':
+            self.ticketing.show_duplicates()
 
     def tshirts(self, action, event_id):
         if action == 'download':
