@@ -40,11 +40,11 @@ class Ticketing(object):
 
     def process(self):
         self._load_speaker_discounts()
-        self._select_tickets(event_id)
-        self._select_tickets(event_id, conference=True)
-        self._load_sent_discounts(event_id)
+        self._select_tickets()
+        self._select_tickets(conference=True)
+        self._load_sent_discounts()
         self.funnel = Funnel()
-        self._load_proposals(event_id)
+        self._load_proposals()
         for email, proposal_group in self.proposals.iteritems():
             if len(proposal_group['confirmed']):
                 proposal = proposal_group['confirmed'][0]
@@ -98,8 +98,8 @@ class Ticketing(object):
                 person['code'] = None
             self.queues['discount'].append(person)
 
-    def _load_sent_discounts(self, event_id):
-        self.sent_discounts_path = os.path.join(self.efmaps_dir, event_id + '_proposer_discounts.csv')
+    def _load_sent_discounts(self):
+        self.sent_discounts_path = os.path.join(self.efmaps_dir, self.doattend.event_id + '_proposer_discounts.csv')
         if not os.path.exists(self.sent_discounts_path):
             with open(self.sent_discounts_path, 'w') as f:
                 f.close()
@@ -190,8 +190,8 @@ class Ticketing(object):
         
         self.mailer.sendmail(msg['From'], to, msg.as_string())
 
-    def _load_proposals(self, event_id):
-        path = os.path.join(self.efmaps_dir, event_id)
+    def _load_proposals(self):
+        path = os.path.join(self.efmaps_dir, self.doattend.event_id)
         if os.path.exists(path):
             with open(path, 'r') as f:
                 proposal_space = f.read()
@@ -233,11 +233,11 @@ class Ticketing(object):
             self.orders[order['email']].append(order)
         print "DoAttend orders loaded..."
 
-    def _select_tickets(self, event_id, conference=False):
+    def _select_tickets(self, conference=False):
         if conference:
-            path = os.path.join(self.efmaps_dir, event_id + '_conf_tickets')
+            path = os.path.join(self.efmaps_dir, self.doattend.event_id + '_conf_tickets')
         else:
-            path = os.path.join(self.efmaps_dir, event_id + '_tickets')
+            path = os.path.join(self.efmaps_dir, self.doattend.event_id + '_tickets')
         if os.path.exists(path):
             with open(path, 'r') as f:
                 if conference:
