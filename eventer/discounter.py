@@ -85,7 +85,7 @@ class Discounter(object):
                     print "Invalid input..."
         codes = []
         discount['percentage'] = {'data': 'true' if discount['type']['data'] == 'percentage' else 'false'}
-        discount['start_date'] = {'data': date.today().strftime('%d-%m-%Y')}
+        discount['start_date'] = {'data': date.today().strftime('%d-%b-%Y')}
         discount['max_limit'] = {'data': '1'}
         selected_tickets = select_tickets(discount)
         discount['tickets'] = {'data': selected_tickets}

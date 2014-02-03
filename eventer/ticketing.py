@@ -282,7 +282,7 @@ class Ticketing(object):
         self.doattend.create_discount(dict(
             percentage=dict(data='true' if percentage else 'false'),
             amt=dict(data=str(value)),
-            start_date=dict(data=date.today().strftime('%d-%m-%Y')),
+            start_date=dict(data=date.today().strftime('%m-%d-%Y')),
             end_date=dict(data=ending.strftime('%m-%d-%Y') if ending else date.today().strftime('%m-%d-%Y')),
             max_limit=dict(data=str(qty)),
             tickets=dict(data=self.selected_tickets),
