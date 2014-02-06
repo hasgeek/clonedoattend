@@ -10,7 +10,7 @@ from collections import defaultdict
 import dateutil.parser
 from .doattend import DoAttend
 from .funnel import Funnel
-from helpers import title, levenshtein, random_discount_code
+from helpers import title, levenshtein, random_discount_code, yes_no
 from instance import config
 import smtplib
 from email.mime.multipart import MIMEMultipart
@@ -109,9 +109,12 @@ class Ticketing(object):
             self.sent_discounts[proposer[0]] = proposer
     
     def _process(self):
-        self._process_bookings()
-        self._process_cancellations()
-        self._process_discounts()
+        if yes_no("Process Ticket Bookings?"):
+            self._process_bookings()
+        if yes_no("Process Ticket Cancellations?"):
+            self._process_cancellations()
+        if yes_no("Process Discount Codes?"):
+            self._process_discounts()
 
     def _process_bookings(self):
         title("PROCESS TICKET BOOKINGS")
