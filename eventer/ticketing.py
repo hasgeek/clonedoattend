@@ -243,7 +243,7 @@ class Ticketing(object):
                 if conference:
                     self.conf_tickets = pickle.load(f)
                 else:
-                    self.selected_tickets = json.loads(f.read())
+                    self.selected_tickets = pickle.load(f)
                 f.close()
             return
         if not hasattr(self, 'discountable_tickets'):
@@ -260,11 +260,10 @@ class Ticketing(object):
                 for i, ticket in enumerate(tickets):
                     tickets[i] = self.discountable_tickets[ticket - 1]
                 with open(path, 'w') as f:
+                    pickle.dump(tickets, f)
                     if conference:
                         self.conf_tickets = tickets
-                        pickle.dump(tickets, f)
                     else:
-                        f.write(json.dumps(ticket))
                         self.selected_tickets = tickets
                 return
             except IndexError:
