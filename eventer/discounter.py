@@ -116,8 +116,8 @@ class Discounter(object):
             msg['Reply-To'] = self.email_info['replyto']
 
         env = Environment(loader=PackageLoader('eventer', 'templates'))
-        if os.path.exists(os.path.join('eventer', 'templates', 'custom', self.event_id + '_discount_email.md')):
-            template = env.get_template('custom/%s_discount_email.md' % self.event_id)
+        if os.path.exists(os.path.join('eventer', 'templates', 'custom', self.doattend.event_id + '_discount_email.md')):
+            template = env.get_template('custom/%s_discount_email.md' % self.doattend.event_id)
         else:
             template = env.get_template('discount_email.md')
         
