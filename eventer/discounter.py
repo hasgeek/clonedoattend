@@ -137,7 +137,7 @@ class Discounter(object):
 
     def _load_discounts(self):
         print "Loading discounts..."
-        f = open(os.path.join(self.discounts_dir, self.discount_files[self.discount_index]))
+        f = open(os.path.join(self.discounts_dir, self.discount_files[self.discount_index]), 'rU')
         csv = unicodecsv.reader(f, delimiter=",", quotechar='"')
         self.discounts = []
         for row in csv:
